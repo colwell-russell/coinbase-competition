@@ -19,25 +19,24 @@ services:
     ports:
       - "49163:8080"
     depends_on:
-      - mysql
+      - mongo
   influxdb:
     image: "influxdb"
     ports:
       - "8086:8086"
     volumes:
       - "./app:/usr/src/app/app"
-  mysql:
-    image: "mysql"
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_DATABASE: coinbase_wallet
+  mongo:
+    image: "mongo"
+    ports:
+      - "27017:27017"
     volumes:
-      - "./app:/usr/src/app/mysql"
-      - "./app:/docker-entrypoint-initdb.d"
-    healthcheck:
-      test: ["CMD", "mysql" ,"ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      - "./app:/usr/src/app/mongo"
+  mongo-express:
+    image: "mongo-express"
+    ports:
+      - "49199:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: "mongo"
+    volumes:
+      - "./app:/usr/src/app/mongo"

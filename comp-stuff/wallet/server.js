@@ -2,31 +2,42 @@
 
 const express = require('express');
 const https = require('https');
-const mysqlx = require('@mysql/xdevapi');
+const MongoClient = require('mongodb').MongoClient;
 
 // Constants
 const PORT = 8080;
 const HOST = '0.0.0.0';
 
-const config = {
-    password: 'example',
-    user: 'root',
-    host: 'mysql',
-    port: 33060,
-    schema: 'coinbase_wallet'
-};
+// Connection URL
+const url = 'mongodb://mongo';
 
-mysqlx.getSession(config)
-    .then(session => {
-        console.log(session.inspect()); // { user: 'root', host: 'localhost', port: 33060 }
-    }).catch(error => {
-        console.log(error);
-    });
+// Database Name
+const dbName = 'wallet';
 
 // App
 const app = express();
 app.get('/add/:amount', (req, res) => {
-    console.log('Checking for amount' + req.params.symbol);
+console.log('Amount: ' + req.params.amount);
+    // Use connect method to connect to the server
+    MongoClient.connect(url, function(err, client) {
+        if(err) {
+            console.log('Connection Error');
+            console.log(err);
+        }
+        console.log("Connected successfully to server");
+
+        const db = client.db(dbName);
+        db.collection('documents').find({}).toArray(function(error, documents) {
+            if (err){
+                console.log(err);
+            }
+
+            console.log(documents);
+            res.send(documents);
+        });
+
+        client.close();
+    });
 });
 
 app.listen(PORT, HOST);
