@@ -1,0 +1,14 @@
+{
+  "name": "getBuyPrice",
+  "version": "1.0.0",
+  "description": "Container that proxies to coinbase to get buy price",
+  "author": "Russell Colwell colwell.russell.emerson@gmail.com",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.1",
+    "coinbase": "^2.0.8"
+  }
+}

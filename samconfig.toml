@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "coinbasecomp"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1w6lztjtc2hjh"
+s3_prefix = "coinbasecomp"
+region = "us-east-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "StageName=\"dev\""

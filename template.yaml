@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  coinbase-competition
+
+  Sample SAM Template for coinbase-competition
+
+Parameters:
+  StageName:
+    Type: String
+    Default: dev
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  UserOneAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      CustomerId: Nick
+      Description: Nick's API Key
+      Enabled: true
+      Name: COINBASECOMP-KEY-1-NICK-CIRANNI
+      Value: COINBASECOMP-KEY-1-NICK-CIRANNI
+  UserTwoAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      CustomerId: Russ
+      Description: Russ's API Key
+      Enabled: true
+      Name: COINBASECOMP-KEY-1-RUSS-COLWELL
+      Value: COINBASECOMP-KEY-1-RUSS-COLWELL
+  CoinbaseCompHttpAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref StageName
+      CacheClusterSize: "0.5"
+      CacheClusterEnabled: true
+      Cors:
+        AllowMethods: "'POST, GET, OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+  GetKeyStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/get-key-status/
+      Handler: app.lambdaHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          DYNAMO_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CoinbaseCompDB.Arn ] ]
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CoinbaseCompHttpAPI
+            Method: GET
+            Path: /get-key-status/
+  PostTransactionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/post-transaction/
+      Handler: app.lambdaHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          DYNAMO_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CoinbaseCompDB.Arn ] ]
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CoinbaseCompHttpAPI
+            Method: POST
+            Path: /post-transaction/
+  CoinbaseCompDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: transactionItem
+          AttributeType: S
+      KeySchema:
+        - AttributeName: transactionItem
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  GetKeyStatusDevHttpAPI:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${CoinbaseCompHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/get-key-status/"
+  PostTransactionDevHttpAPI:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${CoinbaseCompHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/post-transaction"
