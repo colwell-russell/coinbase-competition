@@ -5,6 +5,7 @@ sam build
 sam deploy
 
 Docker Composer notes
+- First build and deploy may need to setup Mongo db.. port is in composer file
 - docker-compose up --build
 - May need to clean out images if you have issue 
   - docker images
