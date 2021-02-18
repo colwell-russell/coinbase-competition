@@ -28,10 +28,13 @@ services:
       - "./app:/usr/src/app/app"
   mongo:
     image: "mongo"
+    environment:
+      MONGO_INITDB_DATABASE: wallet
     ports:
       - "27017:27017"
     volumes:
       - "./app:/usr/src/app/mongo"
+      - "./app/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
   mongo-express:
     image: "mongo-express"
     ports:

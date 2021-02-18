@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const https = require('https')
+const http = require('http')
 const cron = require('node-cron');
 const Influx = require('influx');
 const influx = new Influx.InfluxDB({
@@ -22,18 +22,33 @@ const app = express();
 cron.schedule('* * * * *', function() {
     console.log('---------------------');
     console.log('Running Cron Job');
+    const tickers = ['BTC', 'ETH', 'LTC', 'BCH', 'LINK', 'XLM', 'USDC', 'UNI', 'WBTC', 'AAVE', 'ATOM', 'EOS', 'XTZ',
+        'SNX', 'GRT', 'DASH', 'MKR', 'FIL', 'ALGO', 'COMP', 'DAI', 'ZEC', 'ETC', 'YFI', 'UMA', 'ZRX', 'REN', 'OMG',
+        'LRC', 'BAT', 'CGLD', 'MANA', 'BNT', 'KNC', 'BAND', 'REP', 'CVC', 'BAL', 'NU', 'OXT', 'DNT', 'NMR'];
+
     const verifyDB = async() => {await verifyDbExists()};
     verifyDB();
-    const addSymbol = async() => {await addSymbolToSeries('BTC', 30.33)};
-    addSymbol();
-    influx.query(`select * from "symbol" where "ticker" = 'BTC' order by time desc limit 10`)
-        .then( result => {
-            console.log(result);
-            result.groupsTagsKeys.forEach(row => {
-                console.log(row);
-            })
-        })
-        .catch( error => console.log(error));
+
+    tickers.forEach(key => {
+        console.log('Adding new buy price for symbol ' + key);
+        getBuyPrice(key).then(price => {
+            console.log(price)
+            addSymbolToSeries(key, price).then(result => {
+               console.log(result);
+           });
+       }).catch(error => {
+           console.log(error);
+       });
+    })
+
+    // influx.query(`select * from "symbol" where "ticker" = 'BTC' order by time desc limit 10`)
+    //     .then( result => {
+    //         console.log(result);
+    //         result.groupsTagsKeys.forEach(row => {
+    //             console.log(row);
+    //         })
+    //     })
+    //     .catch( error => console.log(error));
 });
 
 async function verifyDbExists() {
@@ -53,6 +68,7 @@ async function verifyDbExists() {
 
 async function addSymbolToSeries(ticker, price) {
     return new Promise((resolve, reject) => {
+        console.log('Adding ' + ticker + ' - ' + price);
         influx.writePoints([
             {
                 measurement: 'symbol',
@@ -60,7 +76,7 @@ async function addSymbolToSeries(ticker, price) {
                 fields: { price: price }
             }
         ]).then(() => {
-            resolve('SUCCESS');
+            resolve('SUCCESS ' + ticker + ' - ' + price);
         }).catch(err => {
             console.log(err);
         })
@@ -69,7 +85,25 @@ async function addSymbolToSeries(ticker, price) {
 
 async function getBuyPrice(symbol) {
     return new Promise((resolve, reject) => {
-        resolve(20.333);
+        http.get("http://get-buy-price:8080/" + symbol, (response) => {
+            let data = '';
+            console.log('Calling get-buy-price for ' + symbol);
+            response.on('data', (chunk) => {
+                console.log(chunk);
+                data += chunk;
+            })
+
+            response.on('end', () => {
+                let jsonData = JSON.parse(data);
+                console.log(jsonData);
+                const amount = jsonData.data.amount;
+                console.log(amount);
+                resolve(amount);
+            });
+        }).on("error", (err) => {
+            console.log(err.message);
+            reject(err.message);
+        });
     })
 }
 
