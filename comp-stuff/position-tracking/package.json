@@ -1,0 +1,14 @@
+{
+  "name": "position-tracking",
+  "version": "1.0.0",
+  "description": "Container that tracks positions",
+  "author": "Russell Colwell colwell.russell.emerson@gmail.com",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.1",
+    "mongodb": "^3.6.4"
+  }
+}
