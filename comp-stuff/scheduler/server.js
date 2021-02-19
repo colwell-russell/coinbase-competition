@@ -32,7 +32,6 @@ cron.schedule('* * * * *', function() {
     tickers.forEach(key => {
         console.log('Adding new buy price for symbol ' + key);
         getBuyPrice(key).then(price => {
-            console.log(price)
             addSymbolToSeries(key, price).then(result => {
                console.log(result);
            });
@@ -41,24 +40,23 @@ cron.schedule('* * * * *', function() {
        });
     })
 
-    // influx.query(`select * from "symbol" where "ticker" = 'BTC' order by time desc limit 10`)
-    //     .then( result => {
-    //         console.log(result);
-    //         result.groupsTagsKeys.forEach(row => {
-    //             console.log(row);
-    //         })
-    //     })
-    //     .catch( error => console.log(error));
+    influx.query(`select * from "symbol" where "ticker" = 'BTC' order by time desc limit 10`)
+        .then( result => {
+            console.log(result);
+            result.groupsTagsKeys.forEach(row => {
+                console.log(row);
+            })
+        })
+        .catch( error => console.log(error));
 });
 
 async function verifyDbExists() {
     return new Promise((resolve, reject) => {
         influx.getDatabaseNames()
             .then(names => {
-                console.log(names);
+                console.log(names)
                 if (!names.includes('symbols_db')) {
                     influx.createDatabase('symbols_db').then(result => {
-                        console.log(result);
                         resolve(result);
                     });
                 }
@@ -89,15 +87,12 @@ async function getBuyPrice(symbol) {
             let data = '';
             console.log('Calling get-buy-price for ' + symbol);
             response.on('data', (chunk) => {
-                console.log(chunk);
                 data += chunk;
             })
 
             response.on('end', () => {
                 let jsonData = JSON.parse(data);
-                console.log(jsonData);
                 const amount = jsonData.data.amount;
-                console.log(amount);
                 resolve(amount);
             });
         }).on("error", (err) => {

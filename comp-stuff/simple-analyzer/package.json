@@ -1,0 +1,16 @@
+{
+  "name": "simpleAnalyzer",
+  "version": "1.0.0",
+  "description": "Container that analyzes ticker data to determine if we need to add a postition.",
+  "author": "Russell Colwell colwell.russell.emerson@gmail.com",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.1",
+    "coinbase": "^2.0.8",
+    "node-cron": "^2.0.3",
+    "influx": "^5.7.0"
+  }
+}

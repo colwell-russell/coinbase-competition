@@ -20,6 +20,12 @@ services:
       - "49163:8080"
     depends_on:
       - mongo
+  simple-analyzer:
+    build: ./simple-analyzer
+    ports:
+      - "49164:8080"
+    depends_on:
+      - influxdb
   influxdb:
     image: "influxdb"
     ports:
