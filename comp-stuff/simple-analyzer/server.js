@@ -4,6 +4,7 @@ const express = require('express');
 const http = require('http')
 const cron = require('node-cron');
 const Influx = require('influx');
+const MongoClient = require('mongodb').MongoClient;
 const influx = new Influx.InfluxDB({
     host: 'influxdb',
     database: 'symbols_db',
@@ -15,6 +16,11 @@ const influx = new Influx.InfluxDB({
         }
     ]
 });
+// Connection URL
+const url = 'mongodb://mongo';
+
+// Database Name
+const dbName = 'positions';
 
 const app = express();
 
@@ -32,7 +38,7 @@ cron.schedule('* * * * *', function() {
             filterForDataOnly(data).then(filtered => {
                 analyzeData(filtered).then(createPosition => {
                     if(createPosition) {
-                        createPosition(ticker);
+                        createNewPosition(ticker, filtered[0].price);
                     }
                 })
             });
@@ -43,7 +49,7 @@ cron.schedule('* * * * *', function() {
 
 function getBalance() {
     return new Promise((resolve, reject) => {
-        http.get('http://wallet/balance', response => {
+        http.get('http://wallet:8080/balance', response => {
             let data = '';
             console.log('Getting balance from wallet');
             response.on('data', (chunk) => {
@@ -63,8 +69,9 @@ function getBalance() {
 }
 
 function removeFundsFromWallet(funds) {
+    console.log('removeFundsFromWallet: ' + funds);
     return new Promise((resolve, reject) => {
-        http.get('http://wallet/subtract/' + funds, response => {
+        http.get('http://wallet:8080/subtract/' + funds, response => {
             let data = '';
             console.log('Removing funds from wallet: ' + funds);
             response.on('data', (chunk) => {
@@ -81,30 +88,47 @@ function removeFundsFromWallet(funds) {
     });
 }
 
-function createPosition(symbol, price) {
+function createNewPosition(symbol, price) {
     console.log('Checking for new position on ' + symbol);
     const standardBuyAmount = 100;
 
-    getTickerData().then(balance => {
+    getBalance().then(balance => {
         if(balance > standardBuyAmount) {
             //Buy position if you have funds
             removeFundsFromWallet(100).then(fundsRemoved => {
                 console.log('Funds Removed :' + fundsRemoved)
                 if(fundsRemoved) {
                     //ADD POSITION
-
                     let newPosition = {
+                        'status': 'ACTIVE',
                         'symbol': symbol,
                         'quantity': standardBuyAmount / price,
                         'amount': standardBuyAmount,
                         'quitPositionPrice': price - (price * .05),
-                        'updatePositionPrice': price + (price * .03)
+                        'updatePositionPrice': price + (price * .03),
+                        'update-sell-percentage': 10,
+                        'history': []
                     }
+                    console.log('Inserting new position: ');
+                    console.log(newPosition);
+                    MongoClient.connect(url, function(err, client) {
+                        if(err) {
+                            console.log('Connection Error');
+                            console.log(err);
+                        }
+                        console.log("Connected successfully to server");
+
+                        const db = client.db(dbName);
+                        db.collection('colwell_positions').insert(newPosition);
+                        client.close();
+                    });
                 }
             })
         } else {
             console.log('Not enough funds to buy more')
         }
+    }).catch(err => {
+        console.log(err);
     })
 }
 

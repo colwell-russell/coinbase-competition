@@ -28,7 +28,8 @@ app.get('/add/:amount', (req, res) => {
             transactions: doc.transactions
         }
         updateAccountDocument(updateDoc).then(response => {
-            res.send(response);
+            res.status(200);
+            res.json(response);
         })
     })
 });
@@ -45,20 +46,26 @@ app.get('/subtract/:amount', (req, res) => {
             transactions: doc.transactions
         }
         updateAccountDocument(updateDoc).then(response => {
-            res.send(response);
+            res.status(200);
+            res.json(response);
         })
     })
 });
 
 app.get('/balance', (req, res) => {
     getAccountTrackingDocument().then(doc => {
-        res.send(doc.balance)
+        console.log('Returned Doc ' + JSON.stringify(doc));
+        res.status(200);
+        let balance = doc.balance;
+        console.log('Balance ' + balance)
+        res.json(balance.toString());
     })
 });
 
 app.get('/transactions', (req, res) => {
     getAccountTrackingDocument().then(doc => {
-        res.send(doc.transactions)
+        res.status(200);
+        res.json(doc.transactions);
     })
 });
 
@@ -88,7 +95,6 @@ function getAccountTrackingDocument() {
 
 function updateAccountDocument(updateDoc) {
     console.log('Update Doc');
-    console.log(updateDoc);
     return new Promise(resolve => {
         MongoClient.connect(url, function(err, client) {
             if(err) {
@@ -107,7 +113,6 @@ function updateAccountDocument(updateDoc) {
                     $set: updateDoc
                 },
                 (err, result) => {
-                    console.log(result);
                     resolve(result);
                 });
 

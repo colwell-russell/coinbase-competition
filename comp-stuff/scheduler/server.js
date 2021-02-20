@@ -21,7 +21,7 @@ const app = express();
 // Backup a database at 11:59 PM every day.
 cron.schedule('* * * * *', function() {
     console.log('---------------------');
-    console.log('Running Cron Job');
+    console.log('Running Scheduler Cron Job');
     const tickers = ['BTC', 'ETH', 'LTC', 'BCH', 'LINK', 'XLM', 'USDC', 'UNI', 'WBTC', 'AAVE', 'ATOM', 'EOS', 'XTZ',
         'SNX', 'GRT', 'DASH', 'MKR', 'FIL', 'ALGO', 'COMP', 'DAI', 'ZEC', 'ETC', 'YFI', 'UMA', 'ZRX', 'REN', 'OMG',
         'LRC', 'BAT', 'CGLD', 'MANA', 'BNT', 'KNC', 'BAND', 'REP', 'CVC', 'BAL', 'NU', 'OXT', 'DNT', 'NMR'];
