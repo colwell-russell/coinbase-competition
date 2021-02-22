@@ -102,6 +102,7 @@ function createNewPosition(symbol, price) {
                     let newPosition = {
                         'status': 'ACTIVE',
                         'symbol': symbol,
+                        'positionBuyPrice': price,
                         'quantity': standardBuyAmount / price,
                         'amount': standardBuyAmount,
                         'quitPositionPrice': price - (price * .05),

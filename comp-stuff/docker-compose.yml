@@ -26,6 +26,12 @@ services:
       - "49164:8080"
     depends_on:
       - influxdb
+  position-tracking:
+    build: ./position-tracking
+    ports:
+      - "49165:8080"
+    depends_on:
+      - mongo
   influxdb:
     image: "influxdb"
     ports:
