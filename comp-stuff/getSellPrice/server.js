@@ -10,7 +10,7 @@ const HOST = '0.0.0.0';
 // App
 const app = express();
 app.get('/:symbol', (req, res) => {
-    console.log(req.params.symbol)
+    console.log('Getting Sell Price for: ' + req.params.symbol)
     https.get('https://api.coinbase.com/v2/prices/' + req.params.symbol + '-USD/sell', (response) => {
         let data = '';
         console.log('making get');
