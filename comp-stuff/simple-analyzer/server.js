@@ -39,6 +39,7 @@ cron.schedule('* * * * *', function() {
                 analyzeData(filtered).then(createPosition => {
                     if(createPosition) {
                         createNewPosition(ticker, filtered[0].price);
+                        postTransaction(ticker, (100 / filtered[0].price), filtered[0].price)
                     }
                 })
             });
@@ -46,6 +47,44 @@ cron.schedule('* * * * *', function() {
     });
 
 });
+
+function postTransaction(symbol, shares, price) {
+    const options = {
+        hostname: 'amazon-transaction-post',
+        port: 8080,
+        path: '/transaction',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': '*/*',
+            'Accept_Encoding': 'gzip,deflate,br',
+        }
+    }
+
+    const requestBody = {
+        type: 'BUY',
+        symbol: symbol,
+        shares: shares,
+        price: price
+    }
+
+    let data = '';
+    const req = http.request(options, (response) => {
+        console.log(`statusCode: ${response.statusCode}`);
+
+        response.on('data', (chunk) => {
+            console.log(chunk);
+            data += chunk;
+        });
+
+        response.on('end', data => {
+            console.log(data);
+        })
+    });
+
+    req.write(JSON.stringify(requestBody));
+    req.end();
+}
 
 function getBalance() {
     return new Promise((resolve, reject) => {

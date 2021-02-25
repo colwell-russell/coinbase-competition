@@ -40,6 +40,7 @@ cron.schedule('* * * * *', function() {
                     }).catch(error => {
                         console.log('Error doing full sell: ' + error);
                     })
+                    postTransaction(position.symbol, position.quantity, sellPrice);
                 }
 
                 if(sellPrice > parseFloat(position.updatePositionPrice)) {
@@ -64,40 +65,14 @@ cron.schedule('* * * * *', function() {
                             }
                         }).catch(error => {
                             console.log('Error doing partial sell: ' + error);
-                        })
+                        });
+
+                        postTransaction(position.symbol, sellQuantity, sellPrice);
                     });
                 }
             });
         }
     });
-        //
-        //         if(sellPrice > parseFloat(doc.updatePositionPrice)) {
-        //             getNewUpdateSellPercentage(doc['update-sell-percentage'] ).then(updateSellPercentage => {
-        //                 let sellQuantity = doc.quantity * (parseInt(doc['update-sell-percentage'] ) / 100);
-        //                 let addFunds = sellPrice * sellQuantity;
-        //
-        //                 addFundsToWallet(addFunds).then(result => {
-        //                     if(result){
-        //                         doc.quantity = doc.quantity - sellQuantity;
-        //                         doc.updatePositionPrice =  parseFloat(doc.updatePositionPrice) + (parseFloat(doc.updatePositionPrice) * .03);
-        //                         doc['update-sell-percentage'] =  updateSellPercentage;
-        //                         doc.history.push({
-        //                             type: 'SELL',
-        //                             quantity: sellQuantity,
-        //                             amount: addFunds
-        //                         })
-        //
-        //                         updateDocument(doc).then(result => {
-        //                             console.log('Update Saved');
-        //                         });
-        //                     }
-        //                 }).catch(error => {
-        //                     console.log('Error doing partial sell');
-        //                 })
-        //             });
-        //         }
-        //     });
-        // });
 });
 
 function getPositions() {
@@ -193,6 +168,44 @@ function updateDocument(doc) {
             client.close();
         });
     });
+}
+
+function postTransaction(symbol, shares, price) {
+    const options = {
+        hostname: 'amazon-transaction-post',
+        port: 8080,
+        path: '/transaction',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': '*/*',
+            'Accept_Encoding': 'gzip,deflate,br',
+        }
+    }
+
+    const requestBody = {
+        type: 'SELL',
+        symbol: symbol,
+        shares: shares,
+        price: price
+    }
+
+    let data = '';
+    const req = http.request(options, (response) => {
+        console.log(`statusCode: ${response.statusCode}`);
+
+        response.on('data', (chunk) => {
+            console.log(chunk);
+            data += chunk;
+        });
+
+        response.on('end', data => {
+            console.log(data);
+        })
+    });
+
+    req.write(JSON.stringify(requestBody));
+    req.end();
 }
 
 

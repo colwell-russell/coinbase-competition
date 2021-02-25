@@ -1,0 +1,15 @@
+{
+  "name": "amazon-transaction-post",
+  "version": "1.0.0",
+  "description": "Container that post transactions to amazon db",
+  "author": "Russell Colwell colwell.russell.emerson@gmail.com",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.1",
+    "body-parser": "^1.19.0",
+    "coinbase": "^2.0.8"
+  }
+}

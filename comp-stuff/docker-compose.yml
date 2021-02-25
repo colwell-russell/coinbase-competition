@@ -32,6 +32,11 @@ services:
       - "49165:8080"
     depends_on:
       - mongo
+  amazon-transaction-post:
+    build: ./amazon-transaction-post
+    ports:
+      - "49166:8080"
+      - "443:443"
   influxdb:
     image: "influxdb"
     ports:
