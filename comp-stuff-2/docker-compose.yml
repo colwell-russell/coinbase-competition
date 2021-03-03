@@ -1,0 +1,32 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  kibana:
+    image: "docker.elastic.co/kibana/kibana:7.5.1"
+    ports:
+      - "5601:5601"
+    environment:
+      YOUR_ELASTICSEARCH_CONTAINER_NAME_OR_ID: elasticsearch
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.5.2"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+  mongo:
+    image: "mongo"
+    environment:
+      MONGO_INITDB_DATABASE: wallet
+    ports:
+      - "27017:27017"
+    volumes:
+      - "./app:/usr/src/app/mongo"
+      - "./app/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
+  mongo-express:
+    image: "mongo-express"
+    ports:
+      - "49199:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: "mongo"
+    volumes:
+      - "./app:/usr/src/app/mongo"

@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  coinbase-mock-api
+
+  Sample SAM Template for coinbase-mock-api
+Parameters:
+  StageName:
+    Type: String
+    Default: dev
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  CBMockHttpAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref StageName
+      CacheClusterSize: "0.5"
+      CacheClusterEnabled: true
+      Cors:
+        AllowMethods: "'POST, GET, OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+  WalletUsersCreateFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/wallet-users-create/
+      Handler: app.lambdaHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
+          API_DOMAIN: !Sub "https://${CBMockHttpAPI}"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CBMockHttpAPI
+            Method: POST
+            Path: v2/user/
+  WalletUsersShowFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/wallet-users-show/
+      Handler: app.lambdaHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
+          API_DOMAIN: !Sub "https://${CBMockHttpAPI}"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CBMockHttpAPI
+            Method: GET
+            Path: v2/user/{uuid}
+  CBMockUsersDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  UsersAPI:
+    Description: "Users API Endpoint"
+    Value: !Sub "https://${CBMockHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/v2/user/"

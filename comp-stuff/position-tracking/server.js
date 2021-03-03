@@ -45,7 +45,9 @@ cron.schedule('* * * * *', function() {
 
                 if(sellPrice > parseFloat(position.updatePositionPrice)) {
                     getNewUpdateSellPercentage(position['update-sell-percentage'] ).then(updateSellPercentage => {
-                        let sellQuantity = position.quantity * (parseInt(position['update-sell-percentage'] ) / 100);
+                        let sellPercentage = (parseInt(position['update-sell-percentage'] ) / 100);
+                        console.log(sellPercentage);
+                        let sellQuantity = position.quantity * sellPercentage;
                         let addFunds = sellPrice * sellQuantity;
 
                         addFundsToWallet(addFunds).then(result => {
@@ -105,10 +107,15 @@ function getSellPrice(symbol) {
             })
 
             response.on('end', () => {
-                let jsonData = JSON.parse(data);
-                const amount = jsonData.data.amount;
-                console.log('Get sell price data: ' + data);
-                resolve(amount);
+                try{
+                    let jsonData = JSON.parse(data);
+                    const amount = jsonData.data.amount;
+                    console.log('Get sell price data: ' + data);
+                    resolve(amount);
+                } catch(e) {
+                    reject(data);
+                }
+
             });
         }).on("error", (err) => {
             console.log(err.message);

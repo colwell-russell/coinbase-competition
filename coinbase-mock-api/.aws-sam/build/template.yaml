@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'coinbase-mock-api
+
+  Sample SAM Template for coinbase-mock-api
+
+  '
+Parameters:
+  StageName:
+    Type: String
+    Default: dev
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  CBMockHttpAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName:
+        Ref: StageName
+      CacheClusterSize: '0.5'
+      CacheClusterEnabled: true
+      Cors:
+        AllowMethods: '''POST, GET, OPTIONS'''
+        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+        AllowOrigin: '''*'''
+  WalletUsersCreateFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: WalletUsersCreateFN
+      Handler: app.lambdaHandler
+      Policies:
+      - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          USERS_TABLE_NAME:
+            Fn::Select:
+            - 1
+            - Fn::Split:
+              - /
+              - Fn::GetAtt:
+                - CBMockUsersDB
+                - Arn
+          API_DOMAIN:
+            Fn::Sub: https://${CBMockHttpAPI}
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: CBMockHttpAPI
+            Method: POST
+            Path: v2/user/
+  WalletUsersShowFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: WalletUsersShowFN
+      Handler: app.lambdaHandler
+      Policies:
+      - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          USERS_TABLE_NAME:
+            Fn::Select:
+            - 1
+            - Fn::Split:
+              - /
+              - Fn::GetAtt:
+                - CBMockUsersDB
+                - Arn
+          API_DOMAIN:
+            Fn::Sub: https://${CBMockHttpAPI}
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: CBMockHttpAPI
+            Method: GET
+            Path: v2/user/{uuid}
+  CBMockUsersDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+Outputs:
+  UsersAPI:
+    Description: Users API Endpoint
+    Value:
+      Fn::Sub: https://${CBMockHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/dev/v2/user/

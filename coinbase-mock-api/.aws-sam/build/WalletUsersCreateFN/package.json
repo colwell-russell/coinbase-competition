@@ -1,0 +1,24 @@
+{
+  "name": "wallet-users-create",
+  "version": "1.0.0",
+  "description": "Function for creating a new user with a unique uuid",
+  "main": "app.js",
+  "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
+  "author": "SAM CLI",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "node-fetch": "^2.6.1",
+    "uuid": "^8.3.2",
+    "@aws-sdk/client-dynamodb": "^1.0.0-gamma.6"
+  },
+  "scripts": {
+    "test": "mocha tests/unit/",
+    "integ-test": "mocha tests/integration/"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.815.0",
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1"
+  }
+}

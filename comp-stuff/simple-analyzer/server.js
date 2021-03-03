@@ -38,8 +38,13 @@ cron.schedule('* * * * *', function() {
             filterForDataOnly(data).then(filtered => {
                 analyzeData(filtered).then(createPosition => {
                     if(createPosition) {
-                        createNewPosition(ticker, filtered[0].price);
-                        postTransaction(ticker, (100 / filtered[0].price), filtered[0].price)
+                        createNewPosition(ticker, filtered[0].price).then(result => {
+                            console.log(result);
+                            postTransaction(ticker, (100 / filtered[0].price), filtered[0].price)
+                        }).catch(err => {
+                            console.log(err);
+                        })
+
                     }
                 })
             });
@@ -129,46 +134,50 @@ function removeFundsFromWallet(funds) {
 
 function createNewPosition(symbol, price) {
     console.log('Checking for new position on ' + symbol);
-    const standardBuyAmount = 100;
-
-    getBalance().then(balance => {
-        if(balance > standardBuyAmount) {
-            //Buy position if you have funds
-            removeFundsFromWallet(100).then(fundsRemoved => {
-                console.log('Funds Removed :' + fundsRemoved)
-                if(fundsRemoved) {
-                    //ADD POSITION
-                    let newPosition = {
-                        'status': 'ACTIVE',
-                        'symbol': symbol,
-                        'positionBuyPrice': price,
-                        'quantity': standardBuyAmount / price,
-                        'amount': standardBuyAmount,
-                        'quitPositionPrice': price - (price * .05),
-                        'updatePositionPrice': price + (price * .03),
-                        'update-sell-percentage': 10,
-                        'history': []
-                    }
-                    console.log('Inserting new position: ');
-                    console.log(newPosition);
-                    MongoClient.connect(url, function(err, client) {
-                        if(err) {
-                            console.log('Connection Error');
-                            console.log(err);
+    const standardBuyAmount = 100.00;
+    return new Promise((resolve, reject) => {
+        getBalance().then(balance => {
+            console.log("Balance: " + balance + " Standard Amount: " +  standardBuyAmount);
+            if(parseFloat(balance) > standardBuyAmount) {
+                //Buy position if you have funds
+                removeFundsFromWallet(100).then(fundsRemoved => {
+                    console.log('Funds Removed :' + fundsRemoved)
+                    if(fundsRemoved) {
+                        //ADD POSITION
+                        let newPosition = {
+                            'status': 'ACTIVE',
+                            'symbol': symbol,
+                            'positionBuyPrice': price,
+                            'quantity': standardBuyAmount / price,
+                            'amount': standardBuyAmount,
+                            'quitPositionPrice': price - (price * .05),
+                            'updatePositionPrice': price + (price * .03),
+                            'update-sell-percentage': 10,
+                            'history': []
                         }
-                        console.log("Connected successfully to server");
+                        console.log('Inserting new position: ');
+                        console.log(newPosition);
+                        MongoClient.connect(url, function(err, client) {
+                            if(err) {
+                                console.log('Connection Error');
+                                console.log(err);
+                                reject(err);
+                            }
+                            console.log("Connected successfully to server");
 
-                        const db = client.db(dbName);
-                        db.collection('colwell_positions').insert(newPosition);
-                        client.close();
-                    });
-                }
-            })
-        } else {
-            console.log('Not enough funds to buy more')
-        }
-    }).catch(err => {
-        console.log(err);
+                            const db = client.db(dbName);
+                            db.collection('colwell_positions').insert(newPosition);
+                            client.close();
+                            resolve(newPosition);
+                        });
+                    }
+                })
+            } else {
+                reject('Not enough funds to buy more')
+            }
+        }).catch(err => {
+            console.log(err);
+        })
     })
 }
 
