@@ -1,0 +1,54 @@
+{
+	"info": {
+		"_postman_id": "8641ad6c-b1e2-434c-aec2-66950ff4cb37",
+		"name": "coinbase-mock-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "wallet-users-create",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"russell\",\n    \"username\": \"fizzad\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "wallet-users-show",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://922egwklk0.execute-api.us-east-2.amazonaws.com/dev/v2/user/7a760318-677e-4f48-8d87-ac04e8c1e098",
+					"protocol": "https",
+					"host": [
+						"922egwklk0",
+						"execute-api",
+						"us-east-2",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"v2",
+						"user",
+						"7a760318-677e-4f48-8d87-ac04e8c1e098"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

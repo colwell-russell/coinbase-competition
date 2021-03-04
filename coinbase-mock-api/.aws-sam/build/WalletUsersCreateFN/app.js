@@ -1,3 +1,4 @@
+const uuidv4 = require('uuid');
 const AWS = require('aws-sdk');
 
 /**
@@ -17,7 +18,7 @@ exports.lambdaHandler = async (event, context) => {
     const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
     const body = JSON.parse(event.body);
-    const uuid = uuidv4();
+    const uuid = uuidv4.v4();
     const params = {
         TableName: process.env.USERS_TABLE_NAME,
         Item: {
@@ -26,14 +27,14 @@ exports.lambdaHandler = async (event, context) => {
             'username': {S: body.username },
             'profile_location': {S: 'null' },
             'profile_bio': {S: 'null'},
-            'profile_url': {S: process.env.API_DOMAIN + body.username},
+            'profile_url': {S: 'https://' + event.requestContext.apiId + '/' + body.username},
             'avatar_url': {S: 'null'},
             'resource': {S: 'user'},
             'resource_path': {S: 'v2/user/' + uuid}
         }
     }
 
-    console.log(params);
+
     let results = await saveTransaction(params);
     return results;
 
@@ -56,7 +57,17 @@ exports.lambdaHandler = async (event, context) => {
                         "headers": {
                             "Access-Control-Allow-Origin": "*"
                         },
-                        "body": JSON.stringify(params)
+                        "body": JSON.stringify({
+                            'id': uuid,
+                            'name': body.name,
+                            'username': body.username,
+                            'profile_location': 'null' ,
+                            'profile_bio': 'null',
+                            'profile_url': 'https://' + event.requestContext.apiId  + '/' + body.username,
+                            'avatar_url': 'null',
+                            'resource': 'user',
+                            'resource_path': 'v2/user/' + uuid
+                        })
                     });
                 }
             });

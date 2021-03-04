@@ -14,17 +14,18 @@ const { DynamoDBClient, QueryCommand } = require("@aws-sdk/client-dynamodb");
  */
 exports.lambdaHandler = async (event, context, callback) => {
     const dynamoDBDoc = new DynamoDBClient({region: 'us-east-2'});
-
+    console.log(event);
     const params = {
         TableName: process.env.USERS_TABLE_NAME,
         KeyConditionExpression: 'id = :dkey',
         ExpressionAttributeValues: {
-            ':dkey': {'S': event.uuid }
+            ':dkey': {'S': event.pathParameters.uuid }
         }
     }
 
     console.log(params);
     const results = await dynamoDBDoc.send(new QueryCommand(params));
+    console.log(results.Items);
     callback(null, {
         "isBase64Encoded": false,
         "statusCode": 200,
@@ -32,7 +33,15 @@ exports.lambdaHandler = async (event, context, callback) => {
             "Access-Control-Allow-Origin": "*"
         },
         "body": JSON.stringify({
-            "data": results.Items
+            'id': results.Items[0].id.S,
+            'name': results.Items[0].name.S,
+            'username': results.Items[0].username.S,
+            'profile_location': results.Items[0].profile_location.S,
+            'profile_bio': results.Items[0].profile_bio.S,
+            'profile_url': results.Items[0].profile_url.S,
+            'avatar_url': results.Items[0].avatar_url.S,
+            'resource': results.Items[0].resource.S,
+            'resource_path': results.Items[0].resource_path.S
         })
     });
 };

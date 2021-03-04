@@ -19,7 +19,7 @@ Resources:
     Properties:
       StageName: !Ref StageName
       CacheClusterSize: "0.5"
-      CacheClusterEnabled: true
+      CacheClusterEnabled: false
       Cors:
         AllowMethods: "'POST, GET, OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
@@ -36,14 +36,13 @@ Resources:
       Environment:
         Variables:
           USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
-          API_DOMAIN: !Sub "https://${CBMockHttpAPI}"
       Events:
         ApiEvent:
           Type: Api
           Properties:
             RestApiId: !Ref CBMockHttpAPI
             Method: POST
-            Path: v2/user/
+            Path: /v2/user/
   WalletUsersShowFN:
     Type: AWS::Serverless::Function
     Properties:
@@ -56,14 +55,13 @@ Resources:
       Environment:
         Variables:
           USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
-          API_DOMAIN: !Sub "https://${CBMockHttpAPI}"
       Events:
         ApiEvent:
           Type: Api
           Properties:
             RestApiId: !Ref CBMockHttpAPI
             Method: GET
-            Path: v2/user/{uuid}
+            Path: /v2/user/{uuid}
   CBMockUsersDB:
     Type: AWS::DynamoDB::Table
     Properties:
