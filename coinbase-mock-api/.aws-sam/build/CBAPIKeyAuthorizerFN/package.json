@@ -1,7 +1,7 @@
 {
-  "name": "wallet-users-create",
+  "name": "authentication-api-key",
   "version": "1.0.0",
-  "description": "Function for creating a new user with a unique uuid",
+  "description": "Function for validating API Key signing and getting current user",
   "main": "app.js",
   "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
   "author": "SAM CLI",
@@ -9,7 +9,6 @@
   "dependencies": {
     "axios": "^0.21.1",
     "node-fetch": "^2.6.1",
-    "uuid": "^8.3.2",
     "uuid-apikey": "^1.5.1",
     "@aws-sdk/client-dynamodb": "^1.0.0-gamma.6"
   },

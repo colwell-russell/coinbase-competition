@@ -10,6 +10,7 @@
     "axios": "^0.21.1",
     "node-fetch": "^2.6.1",
     "uuid": "^8.3.2",
+    "uuid-apikey": "^1.5.1",
     "@aws-sdk/client-dynamodb": "^1.0.0-gamma.6"
   },
   "scripts": {

@@ -1,4 +1,5 @@
 const uuidv4 = require('uuid');
+const uuidAPIKey = require('uuid-apikey');
 const AWS = require('aws-sdk');
 
 /**
@@ -19,6 +20,7 @@ exports.lambdaHandler = async (event, context) => {
 
     const body = JSON.parse(event.body);
     const uuid = uuidv4.v4();
+    const newApiKey = uuidAPIKey.create();
     const params = {
         TableName: process.env.USERS_TABLE_NAME,
         Item: {
@@ -30,7 +32,9 @@ exports.lambdaHandler = async (event, context) => {
             'profile_url': {S: 'https://' + event.requestContext.apiId + '/' + body.username},
             'avatar_url': {S: 'null'},
             'resource': {S: 'user'},
-            'resource_path': {S: 'v2/user/' + uuid}
+            'resource_path': {S: 'v2/user/' + uuid},
+            'private_key': {S: newApiKey.uuid},
+            'apiKey': {S: newApiKey.apiKey}
         }
     }
 
@@ -66,7 +70,9 @@ exports.lambdaHandler = async (event, context) => {
                             'profile_url': 'https://' + event.requestContext.apiId  + '/' + body.username,
                             'avatar_url': 'null',
                             'resource': 'user',
-                            'resource_path': 'v2/user/' + uuid
+                            'resource_path': 'v2/user/' + uuid,
+                            'private-key': newApiKey.uuid,
+                            'apiKey': newApiKey.apiKey
                         })
                     });
                 }

@@ -24,6 +24,27 @@ Resources:
         AllowMethods: "'POST, GET, OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowOrigin: "'*'"
+      Auth:
+        AddDefaultAuthorizerToCorsPreflight: false
+        ApiKeyRequired: true
+        DefaultAuthorizer: CBAPIKeyAuthorizer
+        Authorizers:
+          CBAPIKeyAuthorizer:
+            FunctionArn: !GetAtt CBAPIKeyAuthorizerFN.Arn
+            Identity:
+              Headers:
+                - CB-ACCESS-KEY
+  CBAPIKeyAuthorizerFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/authentication-api-key/
+      Handler: app.lambdaHandler
+      Runtime: nodejs12.x
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
   WalletUsersCreateFN:
     Type: AWS::Serverless::Function
     Properties:
@@ -43,6 +64,10 @@ Resources:
             RestApiId: !Ref CBMockHttpAPI
             Method: POST
             Path: /v2/user/
+            Auth:
+              ApiFunctionAuth:
+                ApiKeyRequired: false
+                Authorizer: 'NONE'
   WalletUsersShowFN:
     Type: AWS::Serverless::Function
     Properties:
