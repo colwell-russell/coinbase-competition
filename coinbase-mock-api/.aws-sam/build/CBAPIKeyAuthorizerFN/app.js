@@ -1,4 +1,3 @@
-const uuidAPIKey = require('uuid-apikey');
 const crypto = require('crypto');
 const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
 
@@ -14,7 +13,7 @@ const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  * 
  */
-exports.lambdaHandler = async (event, context) => {
+exports.lambdaHandler = async (event, context, callback) => {
 
     const dynamoDBDoc = new DynamoDBClient({region: 'us-east-2'});
     console.log(event);
@@ -38,10 +37,25 @@ exports.lambdaHandler = async (event, context) => {
     console.log('HASH: ' + hash);
     console.log('SIGNATURE: ' +  event.headers['CB-ACCESS-SIGN']);
 
-    return  {
-        "isAuthorized": true,
+    const policy = {
+        "principalId": event.requestContext.accountId, // The principal user identification associated with the token sent by the client.
+        "policyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "execute-api:Invoke",
+                    "Effect": "Allow",
+                    "Resource": event.methodArn
+                }
+            ]
+        },
         "context": {
-            "id": results.Items[0].id.S
-        }
+            "stringKey": "value",
+            "numberKey": "1",
+            "booleanKey": "true"
+        },
+        "usageIdentifierKey": event.headers['CB-ACCESS-KEY']
     }
+
+    callback(null, policy);
 };

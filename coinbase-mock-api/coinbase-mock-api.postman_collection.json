@@ -72,6 +72,15 @@
 				"url": null
 			},
 			"response": []
+		},
+		{
+			"name": "wallet-users-update",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
 		}
 	]
 }

@@ -19,4 +19,16 @@ runtime = "nodejs12.x"
 source_md5 = ""
 functions = ["WalletUsersShowFN"]
 
+[function_build_definitions.d7ba2ea4-92e4-4080-bf8b-32fe503279b9]
+codeuri = "functions/wallet-users-show-current/"
+runtime = "nodejs12.x"
+source_md5 = ""
+functions = ["WalletUsersShowCurrentFN"]
+
+[function_build_definitions.ec10efdf-b009-4c83-b2f2-788837a2e0f8]
+codeuri = "functions/wallet-users-update/"
+runtime = "nodejs12.x"
+source_md5 = ""
+functions = ["WalletUsersUpdateCurrentFN"]
+
 [layer_build_definitions]

@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
 
 /**
@@ -16,8 +15,7 @@ const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
 exports.lambdaHandler = async (event, context, callback) => {
 
     const dynamoDBDoc = new DynamoDBClient({region: 'us-east-2'});
-    console.log(event);
-4
+
     const params = {
         TableName: process.env.USERS_TABLE_NAME,
         KeyConditionExpression: 'id',
@@ -26,36 +24,25 @@ exports.lambdaHandler = async (event, context, callback) => {
             ':dkey': {'S': event.headers['CB-ACCESS-KEY'] }
         }
     }
-
     console.log(params);
     const results = await dynamoDBDoc.send(new ScanCommand(params));
-    console.log(results.Items);
-    const message = event.headers['CB-ACCESS-TIMESTAMP'] + event.method + event.path + '';
-    const hash = crypto.createHmac('SHA256', results.Items[0].private_key.S).update(message).digest('base64');
 
-    console.log('Message: ' + message);
-    console.log('HASH: ' + hash);
-    console.log('SIGNATURE: ' +  event.headers['CB-ACCESS-SIGN']);
-
-    const policy = {
-        "principalId": event.requestContext.accountId, // The principal user identification associated with the token sent by the client.
-        "policyDocument": {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": "execute-api:Invoke",
-                    "Effect": "Allow",
-                    "Resource": event.methodArn
-                }
-            ]
+    callback(null, {
+        "isBase64Encoded": false,
+        "statusCode": 200,
+        "headers": {
+            "Access-Control-Allow-Origin": "*"
         },
-        "context": {
-            "stringKey": "value",
-            "numberKey": "1",
-            "booleanKey": "true"
-        },
-        "usageIdentifierKey": event.headers['CB-ACCESS-KEY']
-    }
-
-    callback(null, policy);
+        "body": JSON.stringify({
+            'id': results.Items[0].id.S,
+            'name': results.Items[0].name.S,
+            'username': results.Items[0].username.S,
+            'profile_location': results.Items[0].profile_location.S,
+            'profile_bio': results.Items[0].profile_bio.S,
+            'profile_url': results.Items[0].profile_url.S,
+            'avatar_url': results.Items[0].avatar_url.S,
+            'resource': results.Items[0].resource.S,
+            'resource_path': results.Items[0].resource_path.S
+        })
+    });
 };

@@ -22,14 +22,13 @@ Resources:
       CacheClusterEnabled: false
       Cors:
         AllowMethods: "'POST, GET, OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,CB-ACCESS-KEY,CB-ACCESS-TIMESTAMP,CB-ACCESS-SIGN'"
         AllowOrigin: "'*'"
       Auth:
         AddDefaultAuthorizerToCorsPreflight: false
-        ApiKeyRequired: true
-        DefaultAuthorizer: CBAPIKeyAuthorizer
         Authorizers:
           CBAPIKeyAuthorizer:
+            FunctionPayloadType: REQUEST
             FunctionArn: !GetAtt CBAPIKeyAuthorizerFN.Arn
             Identity:
               Headers:
@@ -58,16 +57,12 @@ Resources:
         Variables:
           USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
       Events:
-        ApiEvent:
+        RequestEvent:
           Type: Api
           Properties:
             RestApiId: !Ref CBMockHttpAPI
             Method: POST
-            Path: /v2/user/
-            Auth:
-              ApiFunctionAuth:
-                ApiKeyRequired: false
-                Authorizer: 'NONE'
+            Path: /v2/user/create
   WalletUsersShowFN:
     Type: AWS::Serverless::Function
     Properties:
@@ -81,12 +76,56 @@ Resources:
         Variables:
           USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
       Events:
-        ApiEvent:
+        RequestEvent:
           Type: Api
           Properties:
             RestApiId: !Ref CBMockHttpAPI
             Method: GET
             Path: /v2/user/{uuid}
+            Auth:
+              Authorizer: CBAPIKeyAuthorizer
+  WalletUsersShowCurrentFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/wallet-users-show-current/
+      Handler: app.lambdaHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
+      Events:
+        RequestEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CBMockHttpAPI
+            Method: GET
+            Path: /v2/user
+            Auth:
+              Authorizer: CBAPIKeyAuthorizer
+  WalletUsersUpdateCurrentFN:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/wallet-users-update/
+      Handler: app.lambdaHandler
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Runtime: nodejs12.x
+      Timeout: 5
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt CBMockUsersDB.Arn ] ]
+      Events:
+        RequestEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CBMockHttpAPI
+            Method: PUT
+            Path: /v2/user
+            Auth:
+              Authorizer: CBAPIKeyAuthorizer
   CBMockUsersDB:
     Type: AWS::DynamoDB::Table
     Properties:
